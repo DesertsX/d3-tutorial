@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手把手带你上手D3.js数据可视化系列（三）- 古柳</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #f5e6ce;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chart"></div>
+    <script src="../js/d3.js"></script>
+    <script>
+        async function drawChart() {
+            let dataset = await d3.json('../data/2020_bilibili_upzhu.json')
+            console.log(dataset[0])
+            // console.table(dataset)
+            // console.log(dataset.filter(d => d.name.includes('何同学')))
+            // console.log(dataset.filter(d => d.name.includes('回形针')))
+            // console.log(dataset.filter(d => d.tlist === 0))
+            // 机智的党妹 466272 tlist: 0 // likes view 都还有 粉丝数还没有
+
+            dataset.forEach(d => {
+                if (d.tlist !== 0) {
+                    d.tlist.sort((a, b) => b.count - a.count)
+                } else {
+                    // 机智的党妹
+                    d.tlist = [{ tid: 129, count: 100, name: "时尚" }]
+                }
+                d.field = d.tlist[0].name
+            })
+
+            const fields = dataset.map(d => d.field)
+            let fieldCount = {}
+            fields.forEach(d => {
+                if (d in fieldCount) {
+                    fieldCount[d]++
+                }
+                else {
+                    fieldCount[d] = 1
+                }
+            })
+            console.table(fieldCount)
+
+            let fieldCountArray = Object.entries(fieldCount)
+            fieldCountArray.sort((a, b) => b[1] - a[1])
+            console.log(fieldCountArray)
+
+            dataset.map(d => d.fieldId = fieldCountArray.findIndex(f => f[0] === d.field))
+            dataset.sort((a, b) => a.fieldId - b.fieldId)
+
+            const width = 1400
+            const height = 700
+
+            const margin = {
+                top: 100,
+                right: 320,
+                left: 30
+            }
+
+            const svg = d3.select('#chart')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .style('background', '#FEF5E5')
+
+            const bounds = svg.append('g')
+                .attr('transform', `translate(${margin.left}, ${margin.top})`)
+
+            // bounds.append('rect')
+            //     .attr('width', width - margin.left - margin.right)
+            //     .attr('height', height - margin.top)
+            //     .attr('fill', 'none')
+            //     .attr('stroke', 'magenta')
+            //     .attr('stroke-width', 5)
+
+            const colors = [
+                '#5DCD51', '#51CD82', '#51CDC0', '#519BCD', '#515DCD',
+                '#8251CD', '#CD519B', '#CD519B', '#CD515D', '#CD8251',
+                '#CDC051', '#B6DA81', '#D2E8B0', '#A481DA'
+            ]
+
+            // 添加标题
+            const title = svg.append('text')
+                .attr('x', margin.left)
+                .attr('y', margin.top / 2)
+                .attr('dominant-baseline', 'middle')
+                .text('2020年度B站百大Up主分区情况')
+                .style('font-size', '32px')
+                .style('font-weight', 600)
+
+            const rectTotalWidth = 60
+            const rectTotalHeight = 90
+            const rectPadding = 10
+            const rectWidth = rectTotalWidth - rectPadding
+            const rectHeight = rectTotalHeight - rectPadding
+            const columnNum = 17
+
+            // 添加主体图
+            const rectsGroup = bounds.append('g')
+            const rects = rectsGroup.selectAll('rect')
+                .data(dataset)
+                .join('rect')
+                .attr('x', (d, i) => i % columnNum * rectTotalWidth)
+                .attr('y', (d, i) => Math.floor(i / columnNum) * rectTotalHeight)
+                .attr('width', rectWidth)
+                .attr('height', rectHeight)
+                .attr("fill", d => colors[fieldCountArray.findIndex(item => item[0] === d.field)])
+
+            const texts = rectsGroup.selectAll('text')
+                .data(dataset)
+                .join('text')
+                .attr('x', (d, i) => rectWidth / 2 + i % columnNum * rectTotalWidth)
+                .attr('y', (d, i) => rectHeight / 2 + Math.floor(i / columnNum) * rectTotalHeight)
+                .text(d => d.name)
+                .attr('text-anchor', 'middle')
+                .attr('dominant-baseline', 'middle')
+                .attr('fill', '#000')
+                .style('font-size', '9.5px')
+                .style('font-weight', 400)
+            // .style('writing-mode', 'vertical-rl')
+
+            // 添加图例
+            const legendPadding = 30
+
+            const legendGroup = bounds.append('g')
+                .attr('class', 'legend')
+                .attr('transform', `translate(${width - margin.right - legendPadding}, 0)`)
+
+            const legendWidthScale = d3.scaleLinear()
+                .domain([0, d3.max(fieldCountArray, d => d[1])])
+                .range([0, margin.right - legendPadding * 2])
+
+            const legendBarPadding = 3
+            const legendTotalHeight = (Math.floor(dataset.length / columnNum) + 1) * rectTotalHeight - rectPadding
+            const legendBarTotalHeight = legendTotalHeight / fieldCountArray.length
+            const legendBarHeight = legendBarTotalHeight - legendBarPadding * 2
+
+            // legendGroup.append('rect')
+            //     .attr('width', margin.right)
+            //     .attr('height', legendTotalHeight)
+            //     .attr('fill', 'none')
+            //     .attr('stroke', 'magenta')
+            //     .attr('stroke-width', 5)
+
+            const legendBar = legendGroup.selectAll('rect.legend-bar')
+                .data(fieldCountArray)
+                .join('rect')
+                .attr('class', 'legend-bar')
+                .attr('x', 30)
+                .attr('y', (d, i) => legendBarPadding + legendBarTotalHeight * i)
+                .attr('width', d => legendWidthScale(d[1]))
+                .attr('height', legendBarHeight)
+                .attr('fill', (d, i) => colors[i])
+
+            const legendLabel = legendGroup.selectAll('text.legend-label')
+                .data(fieldCountArray)
+                .join('text')
+                .attr('class', 'legend-label')
+                .attr('x', 30 - 10)
+                .attr('y', (d, i) => legendBarTotalHeight * i + legendBarTotalHeight / 2)
+                .style('text-anchor', 'end')
+                .attr('dominant-baseline', 'middle')
+                .text(d => d[0])
+                .style('font-size', '14px')
+
+            const legendNumber = legendGroup.selectAll('text.legend-number')
+                .data(fieldCountArray)
+                .join('text')
+                .attr('class', 'legend-number')
+                .attr('x', d => 35 + legendWidthScale(d[1]))
+                .attr('y', (d, i) => legendBarTotalHeight * i + legendBarTotalHeight / 2)
+                .attr('dominant-baseline', 'middle')
+                .text(d => d[1])
+                .style('font-size', 14)
+                .attr('fill', '#000')
+        }
+
+        drawChart()
+    </script>
+</body>
+
+</html>

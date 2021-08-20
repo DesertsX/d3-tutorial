@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手把手带你上手D3.js数据可视化系列（一）- 古柳</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chart"></div>
+    <script src="../js/d3.js"></script>
+    <script>
+        function drawChart() {
+            const width = window.innerWidth
+            const height = window.innerHeight
+            const svg = d3.select('#chart')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .style('background', '#FEF5E5')
+
+            // // 1. 添加一个矩形
+            // svg.append('rect')
+            //     .attr('x', 30)
+            //     .attr('y', 50)
+            //     .attr('width', 50)
+            //     .attr('height', 100)
+            //     .attr('fill', '#00AEA6')
+
+            // // 2. 元素超出 svg 将不可见
+            // svg.append('rect')
+            //     .attr('x', width / 2 - 25)
+            //     .attr('y', 50)
+            //     .attr('width', 50)
+            //     .attr('height', 100)
+            //     .attr('fill', '#EB5C36')
+
+            // 3. 遍历数据进行添加元素
+            const dataset = d3.range(50)
+            console.log(dataset) // [0, 1, 2, ..., 49]
+
+            const colors = ['#00AEA6', '#DB0047', '#F28F00', '#EB5C36', '#242959', '#2965A7']
+
+            // dataset.forEach(d => {
+            //     svg.append('rect')
+            //         .attr('x', 20 + d * 70)
+            //         .attr('y', 20)
+            //         .attr('width', 50)
+            //         .attr('height', 100)
+            //         .attr('fill', colors[d % colors.length])
+            // })
+
+            // 4. D3.js 添加一组元素的方式
+            // const rects = svg.selectAll('rect.new')
+            //     .data(dataset)
+            //     .join('rect')
+            //     .attr('x', d => 20 + d * 70)
+            //     .attr('y', 20)
+            //     .attr('width', 50)
+            //     .attr('height', 100)
+            //     .attr('fill', d => colors[d % colors.length])
+
+            // 5. 调整布局，换行显示
+            const col_num = parseInt(width / 70)
+            console.log(col_num)
+
+            // const rects = svg.selectAll('rect.new')
+            const rects = svg.selectAll('rect')
+                .data(dataset)
+                .join('rect')
+                .attr('x', d => 20 + d % col_num * 70)
+                .attr('y', d => 20 + Math.floor(d / col_num) * 120)
+                .attr('width', 50)
+                .attr('height', 100)
+                .attr('fill', d => colors[d % colors.length])
+
+            // 6. 显示取余取整的数字
+            // const texts = svg.selectAll('text')
+            //     .data(dataset)
+            //     .join('text')
+            //     .attr('x', d => 45 + d % col_num * 70)
+            //     .attr('y', d => 74 + Math.floor(d / col_num) * 120)
+            //     .text(d => `${d % col_num}, ${Math.floor(d / col_num)}`)
+            //     .attr('text-anchor', 'middle')
+            //     .attr('fill', '#fff')
+        }
+
+        drawChart()
+    </script>
+</body>
+
+</html>

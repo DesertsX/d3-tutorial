@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手把手带你上手D3.js数据可视化系列（二）- 古柳</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chart"></div>
+    <script src="../js/d3.js"></script>
+    <script>
+        function drawChart() {
+            const width = window.innerWidth
+            const height = window.innerHeight
+            const svg = d3.select('#chart')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .style('background', '#FEF5E5')
+
+            const dataset = d3.range(30)
+            console.log(dataset)
+
+            const colors = ['#00AEA6', '#DB0047', '#F28F00', '#EB5C36', '#242959', '#2965A7']
+
+            const containerWidth = width
+            const containerHeight = height
+            const containerArea = containerWidth * containerHeight
+
+            // margin
+            const halfMargin = (containerWidth / 100) * 0.3
+            const totalMargin = halfMargin * 2
+            // page width * (1.5 * width) * dataset.length = areaContainer
+            let rectWidth =
+                Math.sqrt(containerArea / (1.5 * dataset.length)) - totalMargin
+            // const rectTotalWidth = rectWidth + totalMargin
+
+            const columns = containerWidth / (rectWidth + totalMargin)
+            const rows = dataset.length / columns
+            const rest = dataset.length % parseInt(columns)
+            console.log('col=', columns, 'row=', rows, 'rest=', rest)
+
+            if (rest <= rows) {
+                rectWidth = containerWidth / (columns + 1) - totalMargin
+            } else if (rest > rows) {
+                rectWidth = containerWidth / (columns + 2) - totalMargin
+            }
+
+            const rectHeight = 1.5 * rectWidth
+            // const rectTotalMargin = containerWidth * 0.005
+            const rectTotalMargin = containerWidth * 0.015
+            const rectTotalWidth = rectWidth + rectTotalMargin
+            const rectTotalHeight = rectHeight + rectTotalMargin
+
+            const columnNum = Math.floor(containerWidth / rectTotalWidth)
+
+            const rects = svg.selectAll('rect')
+                .data(dataset)
+                .join('rect')
+                .attr('x', d => rectTotalMargin + d % columnNum * rectTotalWidth)
+                .attr('y', d => rectTotalMargin + Math.floor(d / columnNum) * rectTotalHeight)
+                .attr('width', rectWidth)
+                .attr('height', rectHeight)
+                .attr('fill', d => colors[d % colors.length])
+
+        }
+
+        drawChart()
+    </script>
+</body>
+
+</html>
