@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>手把手带你上手D3.js数据可视化系列（四）- 古柳</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chart"></div>
+    <script src="../js/d3.js"></script>
+    <script>
+        function drawChart() {
+            const dataset = d3.range(6)
+
+            const svg = d3.select('#chart')
+                .append('svg')
+                .attr('width', window.innerWidth)
+                .attr('height', window.innerHeight)
+                .style('background-color', '#FEF5E5')
+
+            const colors = ['#00AEA6', '#F28F00', '#2965A7', '#DB0047', '#242959', '#EB5C36']
+
+            const rectWidth = 50
+            const rectHeight = 100
+            const radius = rectWidth / 2 - 10
+
+            // 方式1
+            const group1 = svg.append('g')
+            const rects = group1.selectAll('rect')
+                .data(dataset)
+                .join('rect')
+                .attr('x', d => 150 + d * 75)
+                .attr('y', 50)
+                .attr('width', rectWidth)
+                .attr('height', rectHeight)
+                .attr('fill', d => colors[d])
+
+            const text = group1.selectAll('text')
+                .data(dataset)
+                .join('text')
+                .attr('x', d => 150 + d * 75 + rectWidth / 2)
+                .attr('y', 50 + rectHeight / 2)
+                .text(d => d)
+                .attr('fill', '#fff')
+                .style('text-anchor', 'middle')
+                .style('dominant-baseline', 'middle')
+
+            const circles = group1.selectAll('circle')
+                .data(dataset)
+                .join('circle')
+                .attr('cx', d => 150 + d * 75 + rectWidth / 2)
+                .attr('cy', d => 50 + rectHeight / 2)
+                .attr('r', radius)
+                .attr('fill', 'transparent')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2)
+
+
+            // 方式2
+            const group2 = svg.append('g')
+                // .attr('transform', 'translate(0, 200)')
+                .attr('transform', 'translate(150, 200)')
+
+            const groups = group2.selectAll('g')
+                .data(dataset)
+                .join('g')
+                // .attr('transform', d => `translate(${150 + d * 75}, 0)`)
+                .attr('transform', d => `translate(${d * 75}, 0)`)
+
+            groups.append('rect')
+                .attr('width', rectWidth)
+                .attr('height', rectHeight)
+                .attr('fill', d => colors[d])
+
+            // const rectPadding = 14
+            // groups.append('rect')
+            //     .attr('x', -rectPadding / 2)
+            //     .attr('y', -rectPadding / 2)
+            //     .attr('width', rectWidth + rectPadding)
+            //     .attr('height', rectHeight + rectPadding)
+            //     .attr('fill', 'transparent')
+            //     .attr('stroke', 'red')
+            //     .attr('stroke-width', 3)
+
+            groups.append('text')
+                .attr('x', rectWidth / 2)
+                .attr('y', rectHeight / 2)
+                .text(d => d)
+                .attr('fill', '#fff')
+                .style('text-anchor', 'middle')
+                .style('dominant-baseline', 'middle')
+
+            groups.append('circle')
+                .attr('cx', rectWidth / 2)
+                .attr('cy', rectHeight / 2)
+                .attr('r', radius)
+                .attr('fill', 'transparent')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2)
+
+            groups.append('line')
+                .attr('x1', 0)
+                .attr('y1', rectHeight / 2 + radius)
+                .attr('x2', rectWidth)
+                .attr('y2', rectHeight / 2 + radius)
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2)
+
+            // 基于某属性的数值大小绘制不同数量的 svg 元素
+            // 方法1
+            // groups.selectAll('circle.dot')
+            //     .data(d => d3.range(d))
+            //     .join('circle')
+            //     .attr('class', 'dot')
+            //     .attr('cx', (d, i) => 3.5 + i * 10)
+            //     .attr('cy', rectHeight + 15)
+            //     .attr('r', 3.5)
+            //     .attr('fill', d => colors[d])
+
+            // 方法2
+            // groups.selectAll('circle.dot')
+            //     .data(d => {
+            //         return d3.range(d).map(item => ({
+            //             dot: item,
+            //             count: d
+            //         }))
+            //     })
+            //     .join('circle')
+            //     .attr('class', 'dot')
+            //     .attr('cx', (d, i) => rectWidth / (d.count + 1) * (i + 1))
+            //     .attr('cy', rectHeight + 15)
+            //     .attr('r', 3.5)
+            //     .attr('fill', d => colors[d.count])
+
+            // 方法3
+            // https://github.com/d3/d3-selection#selection_each
+            // 不能用箭头函数
+            // groups.each((item, index) => {
+            groups.each(function (item, index) {
+                console.log(item, index, this)
+                d3.select(this)
+                    .selectAll('circle.dot')
+                    .data(d3.range(item))
+                    .join('circle')
+                    .attr('class', 'dot')
+                    .attr('cx', (d, i) => rectWidth / (item + 1) * (i + 1))
+                    .attr('cy', rectHeight + 15)
+                    .attr('r', 3.5)
+                    .attr('fill', colors[item])
+            })
+        }
+
+        drawChart()
+    </script>
+</body>
+
+</html>
